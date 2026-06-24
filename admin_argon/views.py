@@ -1,7 +1,12 @@
+import logging
+
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from admin_argon.forms import RegistrationForm, LoginForm, UserPasswordResetForm, UserSetPasswordForm, UserPasswordChangeForm
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView, PasswordChangeView
 from django.contrib.auth import logout
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -28,10 +33,11 @@ def register(request):
     form = RegistrationForm(request.POST)
     if form.is_valid():
       form.save()
-      print("Account created successfully!")
+      messages.success(request, "Account created successfully!")
       return redirect('/accounts/login/')
     else:
-      print("Registration failed!")
+      logger.warning("Registration failed for user input: %s", form.errors.as_json())
+      messages.error(request, "Registration failed. Please correct the errors below.")
   else:
     form = RegistrationForm()
 
