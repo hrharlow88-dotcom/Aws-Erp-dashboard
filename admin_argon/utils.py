@@ -5,8 +5,11 @@ Copyright (c) 2019 - present AppSeed.us
 
 import datetime
 import json
+import logging
 from django.template import Context
 from django.utils import translation
+
+logger = logging.getLogger(__name__)
 
 try:
     from django.apps.registry import apps
@@ -14,7 +17,8 @@ except ImportError:
     try:
         from django.apps import apps  # Fix Django 1.7 import issue
     except ImportError:
-        pass
+        apps = None
+        logger.warning("Could not import 'apps' from django. App registry features will be unavailable.")
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse
 
@@ -98,12 +102,12 @@ def get_app_list(context, order=True):
                     try:
                         model_dict['admin_url'] = reverse('admin:%s_%s_changelist' % info, current_app=admin_site.name)
                     except NoReverseMatch:
-                        pass
+                        logger.debug("No changelist URL for %s_%s", *info)
                 if perms.get('add', False):
                     try:
                         model_dict['add_url'] = reverse('admin:%s_%s_add' % info, current_app=admin_site.name)
                     except NoReverseMatch:
-                        pass
+                        logger.debug("No add URL for %s_%s", *info)
                 if app_label in app_dict:
                     app_dict[app_label]['models'].append(model_dict)
                 else:
@@ -151,8 +155,8 @@ def get_admin_site(context):
         for func_closure in index_resolver.func.__closure__:
             if isinstance(func_closure.cell_contents, AdminSite):
                 return func_closure.cell_contents
-    except:
-        pass
+    except (AttributeError, IndexError, NoReverseMatch, TypeError) as e:
+        logger.debug("Could not resolve admin site from context, falling back to default: %s", e)
 
     return admin.site
 
@@ -236,8 +240,11 @@ def get_model_queryset(admin_site, model, request, preserved_filters=None):
     try:
         cl = ChangeList(*change_list_args)
         queryset = cl.get_queryset(request)
-    except IncorrectLookupParameters:
-        pass
+    except IncorrectLookupParameters as e:
+        logger.warning(
+            "Incorrect lookup parameters for model %s.%s: %s",
+            model._meta.app_label, model._meta.model_name, e
+        )
 
     return queryset
 
