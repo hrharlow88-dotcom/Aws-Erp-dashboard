@@ -3,25 +3,38 @@ from admin_argon.forms import RegistrationForm, LoginForm, UserPasswordResetForm
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetConfirmView, PasswordChangeView
 from django.contrib.auth import logout
 
-# Create your views here.
+
+def _render_page(request, template, segment):
+  return render(request, template, {'segment': segment})
+
+
+PAGE_REGISTRY = {
+    'index':   ('pages/dashboard.html',         'dashboard'),
+    'billing': ('pages/billing.html',            'billing'),
+    'profile': ('pages/profile.html',            'profile'),
+    'tables':  ('pages/tables.html',             'tables'),
+    'rtl':     ('pages/rtl.html',                'rtl'),
+    'vr':      ('pages/virtual-reality.html',    'vr'),
+}
+
 
 def index(request):
-  return render(request, 'pages/dashboard.html', {'segment': 'dashboard'})
+  return _render_page(request, *PAGE_REGISTRY['index'])
 
 def billing(request):
-  return render(request, 'pages/billing.html', {'segment': 'billing'})
+  return _render_page(request, *PAGE_REGISTRY['billing'])
 
 def profile(request):
-  return render(request, 'pages/profile.html', {'segment': 'profile'})
+  return _render_page(request, *PAGE_REGISTRY['profile'])
 
 def tables(request):
-  return render(request, 'pages/tables.html', {'segment': 'tables'})
+  return _render_page(request, *PAGE_REGISTRY['tables'])
 
 def rtl(request):
-  return render(request, 'pages/rtl.html', {'segment': 'rtl'})
+  return _render_page(request, *PAGE_REGISTRY['rtl'])
 
 def vr(request):
-  return render(request, 'pages/virtual-reality.html', {'segment': 'vr'})
+  return _render_page(request, *PAGE_REGISTRY['vr'])
 
 def register(request):
   if request.method == 'POST':
